@@ -1,0 +1,127 @@
+diff --git a/src/pages/RecipeInProgress.jsx b/src/pages/RecipeInProgress.jsx
+index db7cb75..50e2b00 100644
+--- a/src/pages/RecipeInProgress.jsx
++++ b/src/pages/RecipeInProgress.jsx
+@@ -10,17 +10,6 @@ function RecipeInProgress() {
+   const pathArray = path.split('/');
+   const typeOfUrl = pathArray[1];
+ 
+-  // const defaultChecked = {
+-  //   [typeOfUrl]: {
+-  //     [id]: [],
+-  //   },
+-  // };
+-
+-  // const localStorageGet = readObject('inProgressRecipes', defaultChecked);
+-
+-  // const verificaIDLocal = Object.entries(localStorageGet[typeOfUrl]).some((key) => key[0] === id);
+-
+-  // const final = verificaIDLocal ? localStorageGet : defaultChecked;
+   const [test, setTest] = useState({});
+   const [meals, setMeals] = useState([]);
+   const [drinks, setDrinks] = useState([]);
+@@ -80,17 +69,10 @@ function RecipeInProgress() {
+   };
+ 
+   const handleFinishRecipeBtn = () => {
+-    const localStorageLoad = readObject('doneRecipes') || [];
++    const localStorageLoad = readObject('doneRecipes', []);
+     const doneRecipes = [...localStorageLoad];
+     const date = new Date();
+-    const day = date.getDate();
+-    const month = date.getMonth() + 1;
+-    const year = date.getFullYear();
+-    const hour = date.getHours();
+-    const m = date.getMinutes();
+-    const s = date.getSeconds();
+-    const ms = date.getMilliseconds();
+-    const doneDate = `${year}-0${month}-${day}T${hour + magicNum.three}:${m}:${s}.${ms}Z`;
++    const doneDate = date.toISOString();
+     const doneRecipe = {
+       id: meals.idMeal || drinks.idDrink,
+       type: drinkORmeal.slice(0, magicNum.one),
+@@ -107,34 +89,38 @@ function RecipeInProgress() {
+     history.push('/done-recipes');
+   };
+ 
++  const isChecked = (ingredient) => {
++    try {
++      if (test[typeOfUrl][id]?.includes(ingredient)) {
++        return true;
++      }
++    } catch (error) {
++      return false;
++    }
++  };
++
+   const handleChecked = (event) => {
+-    const checkedList = { ...test };
+-    const findBoolean = Object.entries(checkedList).some((item) => item.id === id);
+-    if (!findBoolean) {
+-      const checkValues = test[typeOfUrl] ? test[typeOfUrl] : [];
+-      console.log({ ...checkValues });
++    if (!test[typeOfUrl]) test[typeOfUrl] = {};
++
++    const ingredient = event.target.value;
++    const checkedList = test[typeOfUrl][id] || [];
++    if (!isChecked(ingredient)) {
+       setTest({
+         [typeOfUrl]: {
+-          ...checkValues,
+-          [id]: [event.target.value],
++          ...test[typeOfUrl],
++          [id]: [
++            ...checkedList,
++            ingredient,
++          ],
+         },
+       });
+     } else {
+-      // const filteredID =  Object.entries(checkedList).filter((item) => item[0] === id);
+-      // setTest({
+-      //   ...test,
+-      //   [typeOfUrl]: {
+-      //     [id]:
+-    }
+-  };
+-
+-  const isChecked = (ingredient) => {
+-    try {
+-      if (test[typeOfUrl][id]?.includes(ingredient)) {
+-        return 'line-through solid rgb(0, 0, 0)';
+-      }
+-    } catch (error) {
+-      return 'none';
++      setTest({
++        [typeOfUrl]: {
++          ...test[typeOfUrl],
++          [id]: checkedList.filter((item) => item !== ingredient),
++        },
++      });
+     }
+   };
+ 
+@@ -152,19 +138,14 @@ function RecipeInProgress() {
+               htmlFor={ i }
+               data-testid={ `${i - 1}-ingredient-step` }
+               style={ {
+-                textDecoration: isChecked(variable[`strIngredient${i}`]),
++                textDecoration: isChecked(variable[`strIngredient${i}`])
++                  ? 'line-through solid rgb(0, 0, 0)' : 'none',
+               } }
+             >
+               <input
+                 type="checkbox"
+                 onChange={ handleChecked }
+-                checked={ () => {
+-                  try {
+-                    return test[typeOfUrl][id]?.includes(variable[`strIngredient${i}`]);
+-                  } catch (error) {
+-                    return false;
+-                  }
+-                } }
++                checked={ isChecked(variable[`strIngredient${i}`]) }
+                 value={ variable[`strIngredient${i}`] }
+               />
+               {variable[`strIngredient${i}`]}
+               
